@@ -116,7 +116,7 @@ SKILL.md 中的路径 `~/tools/session-lens` 需要改成你的仓库位置。
 |--------|------|------|
 | codex | `~/.codex/sessions/**` 与 `~/.codex/archived_sessions/` | JSONL（session_meta + response_item/message，model 取自 thread_settings_applied） |
 | pi | `~/.pi/agent/sessions/<cwd-slug>/*.jsonl` | JSONL（session 头 + message 行，model 取自 model_change） |
-| zcode | `~/.zcode/cli/agents/sess_*/agent_*/` | `metadata.json` + `transcript.jsonl` |
+| zcode | `~/.zcode/cli/agents/sess_*/agent_*/` | `metadata.json` + `transcript.jsonl`（剔除 system-reminder 注入与多轮重发去重；`<thinking>` 块不入聊天记录） |
 | opencode | `~/.local/share/opencode/opencode.db` | SQLite（session/message/part 表） |
 | aionui | `%APPDATA%/AionUi/aionui/aionrs-sessions/sessions/<id>/state.json` | JSON（messages 数组） |
 

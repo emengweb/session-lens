@@ -2,21 +2,32 @@
 import path from 'node:path';
 import { readFileSafe, listDirs, home } from '../fsutil.js';
 
+const isReminder = (s) => s.startsWith('<system-reminder>') || s.startsWith('<system-reminder ');
+
 /** 从 transcript 事件行提取 user/assistant 消息。导出以便单测。 */
 export function fromTranscriptRows(lines) {
   const messages = [];
   let updated = '';
+  const seenUser = new Set();
   for (const l of lines) {
     const t = l.type || '';
     if (t === 'model_request') {
       for (const m of (l.payload?.messages || [])) {
         if (m.role !== 'user') continue;
         const text = typeof m.content === 'string' ? m.content : flatten(m.content);
-        if (text) messages.push({ role: 'user', ts: l.timestamp || '', text });
+        if (!text || isReminder(text)) continue; // 跳过平台注入的 system-reminder
+        // model_request 携带全量历史，同一 user 文本在多轮请求中重发；按文本去重，保留首次出现位置
+        const key = text.length > 200 ? text.slice(0, 200) : text;
+        if (seenUser.has(key)) continue;
+        seenUser.add(key);
+        messages.push({ role: 'user', ts: l.timestamp || '', text });
       }
     }
     if (t === 'model_complete' && l.payload?.content) {
-      messages.push({ role: 'assistant', ts: l.timestamp || '', text: String(l.payload.content) });
+      const text = String(l.payload.content);
+      if (text && !text.startsWith('<thinking>')) {
+        messages.push({ role: 'assistant', ts: l.timestamp || '', text });
+      }
     }
     if (l.timestamp) updated = l.timestamp;
   }

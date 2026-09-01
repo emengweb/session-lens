@@ -42,10 +42,11 @@ export async function runCli(argv) {
     }
 
     const s = sessions[0]; // findSessions 已按 updated 倒序
+    const ident = identityOf(s);
     if (o.json) {
       const out = {
-        sessionId: s.id, source: s.source, name: identityOf(s).name || s.title,
-        role: identityOf(s).role, team: identityOf(s).team,
+        sessionId: s.id, source: s.source, name: ident.name || s.title,
+        role: ident.role, team: ident.team,
         model: s.model, cwd: s.cwd, updated: s.updated, file: s.file,
         messageCount: s.messages.length,
         taskBoard: s.messages.length ? extractBoard(s.messages[s.messages.length - 1].text) : '',
@@ -55,8 +56,7 @@ export async function runCli(argv) {
       return 0;
     }
 
-    const id = identityOf(s);
-    console.log(`== 会话 ${s.id} | ${id.name || s.title || '?'} (role: ${id.role || '?'}) [${s.source}] ==`);
+    console.log(`== 会话 ${s.id} | ${ident.name || s.title || '?'} (role: ${ident.role || '?'}) [${s.source}] ==`);
     console.log(`cwd=${s.cwd || '?'}  model=${s.model || '?'}`);
     console.log(`updated=${s.updated}  消息数=${s.messages.length}  file=${s.file}`);
     const board = s.messages.length ? extractBoard(s.messages[s.messages.length - 1].text) : '';
@@ -124,15 +124,24 @@ function renderSearch(o, matches, scanned) {
     console.log(JSON.stringify({
       query: { patterns: o.search, sources: o.sources, ids: o._ids || [], role: o.role, cwd: o.cwd, context: o.context, jobs: o.jobs },
       scanned,
-      matches: matches.map((m) => ({ ...m, hits: m.hits.map((h) => ({ ...h, text: clip(h.text, o.chars) })) })),
+      matches: matches.map((m) => ({
+        ...m,
+        hits: m.hits.map((h) => ({
+          ...h,
+          text: clip(h.text, o.chars),
+          before: h.before.map((b) => ({ ...b, text: clip(b.text, Math.min(o.chars, o.ctxChars)) })),
+          after: h.after.map((a) => ({ ...a, text: clip(a.text, Math.min(o.chars, o.ctxChars)) })),
+        })),
+      })),
     }, null, 2));
     return 0;
   }
-  console.log(`搜索 ${o.search.join(' | ')} · 来源 ${o.sources.join(',')} · jobs=${o.jobs} · 扫描 ${scanned.files} 会话/${scanned.durationMs}ms`);
+  console.log(`搜索 ${o.search.join(' | ')} · 来源 ${o.sources.join(',')} · jobs=${o.jobs} · 扫描 ${scanned.sessions} 会话/${scanned.durationMs}ms${scanned.errors ? ` · 错误 ${scanned.errors}` : ''}`);
+  if (scanned.errors && !o.json) {
+    for (const d of scanned.errorDetails.slice(0, 5)) console.error(`  [warn] ${d}`);
+  }
   if (!matches.length) { console.log('无命中。'); return 1; }
   for (const m of matches) {
-    const id = identityOf({ messages: [] }); // noop，避免未用告警
-    void id;
     console.log(`\n=== [${m.source}] ${m.sessionId}${m.title ? ` | ${m.title}` : ''}${m.role ? ` (${m.role})` : ''} ===`);
     console.log(`cwd=${m.cwd || '?'}  model=${m.model || '?'}  updated=${m.updated}  命中=${m.totalHits} 条`);
     console.log(`文件: ${m.file}`);

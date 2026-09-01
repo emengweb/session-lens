@@ -135,7 +135,7 @@ test('searchSessions: 无命中返回空 matches 但带扫描统计', async (t) 
   await makeFixtureHome(t);
   const res = await searchSessions({ sources: ['aionui'], patterns: compilePatterns(['zzz-not-exist']), jobs: 1 });
   assert.deepEqual(res.matches, []);
-  assert.ok(res.scanned.files >= 2);
+  assert.ok(res.scanned.sessions >= 2);
 });
 
 test('searchSessions: role 过滤在搜索模式生效', async (t) => {

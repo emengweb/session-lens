@@ -1,7 +1,7 @@
 /** AionUi — aionrs 会话: ~/AppData/Roaming/AionUi/aionui/aionrs-sessions/sessions/<id>/state.json */
 import fs from 'node:fs';
 import path from 'node:path';
-import { flattenContent, parseJsonl } from '../core.js';
+import { flattenContent, stripGovernanceBoilerplate } from '../core.js';
 import { listDirs, readFileSafe, home } from '../fsutil.js';
 
 /** 解析 state.json（messages 数组或 JSONL 文本）。 */
@@ -22,13 +22,8 @@ export function parse(content, file) {
       text = String(m.content.text);
     }
     if (!text) continue;
-    if (/^\s*## Team Governance/.test(text)) {
-      // 剥离治理样板，保留身份/新消息/任务板等有效部分；纯样板则丢弃
-      const keepFrom = ['## Your Identity', '## New Messages', '## Current Task Board Summary']
-        .map((h) => text.indexOf(h)).filter((i) => i >= 0);
-      if (!keepFrom.length) continue;
-      text = text.slice(Math.min(...keepFrom));
-    }
+    text = stripGovernanceBoilerplate(text);
+    if (!text) continue;
     messages.push({ role, ts, text });
   }
   return {

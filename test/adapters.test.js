@@ -65,6 +65,31 @@ test('zcode transcript rows: user/assistant 提取', () => {
   ]);
 });
 
+test('zcode: system-reminder 剔除 + 多轮重发去重', () => {
+  const rows = [
+    { type: 'model_request', timestamp: 'T1', payload: { messages: [
+      { role: 'user', content: '<system-reminder>\nskills…' },
+      { role: 'user', content: '第一问' },
+    ] } },
+    { type: 'model_complete', timestamp: 'T2', payload: { content: '答一' } },
+    { type: 'model_complete', timestamp: 'T2b', payload: { content: '<thinking>内部推理不应进入聊天记录' } },
+    { type: 'model_request', timestamp: 'T3', payload: { messages: [
+      { role: 'user', content: '<system-reminder>\nskills…' },
+      { role: 'user', content: '第一问' }, // 重发
+      { role: 'user', content: '<system-reminder>TodoWrite…' },
+      { role: 'user', content: '第二问' },
+    ] } },
+    { type: 'model_complete', timestamp: 'T4', payload: { content: '答二' } },
+  ];
+  const { messages } = fromTranscriptRows(rows);
+  assert.deepEqual(messages.map((m) => [m.role, m.text]), [
+    ['user', '第一问'],
+    ['assistant', '答一'],
+    ['user', '第二问'],
+    ['assistant', '答二'],
+  ]);
+});
+
 test('zcode parseSession: metadata + transcript 合成', () => {
   const meta = { agentId: 'agent_1', description: 'Locate retry config', cwd: 'C:/ws', profileId: 'general-purpose', createdAt: '2026-08-31T06:08:50Z', parentSessionId: 'sess_p' };
   const s = parseSession(meta, ZC_LINES, 'C:/t/transcript.jsonl');

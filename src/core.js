@@ -59,6 +59,18 @@ export function flattenContent(content) {
   return '';
 }
 
+/**
+ * 剥离 AionUi 团队治理样板（## Team Governance ...），保留身份/新消息/任务板等有效部分。
+ * 纯样板文本返回 ''。codex（aionui-session 来源）与 aionui adapter 共用。
+ */
+export function stripGovernanceBoilerplate(text) {
+  if (!/^s*## Team Governance/.test(text)) return text;
+  const keepFrom = ['## Your Identity', '## New Messages', '## Current Task Board Summary']
+    .map((h) => text.indexOf(h)).filter((i) => i >= 0);
+  if (!keepFrom.length) return '';
+  return text.slice(Math.min(...keepFrom));
+}
+
 /** 按更新时间倒序。 */
 export function byUpdatedDesc(a, b) {
   return a.updated < b.updated ? 1 : -1;
