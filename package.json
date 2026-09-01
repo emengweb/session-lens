@@ -5,7 +5,7 @@
   "type": "module",
   "bin": { "session-lens": "bin/session-lens.mjs" },
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test \"test/*.test.js\""
   },
   "license": "MIT"
 }

@@ -29,7 +29,12 @@ npm link && session-lens -s <source>
 
 | 选项 | 说明 | 默认 |
 |------|------|------|
-| `-s, --source` | 数据来源: `codex` `pi` `zcode` `opencode` `aionui` | 必填 |
+| `-s, --source` | 数据来源: `codex` `pi` `zcode` `opencode` `aionui`；可重复传多个 | 查看模式必填 |
+| `--search` | **全文搜索**；可重复传多个 pattern，任一命中即算 | — |
+| `--context` | 搜索命中消息前后各取 N 条上下文 | 2 |
+| `--ctx-chars` | 上下文消息截断长度 | 300 |
+| `-j, --jobs` | 搜索并发度 | 3 |
+| `--limit` | 每个会话最多报告的命中条数 | 20 |
 | `-n, --last` | 显示最近 N 条文本消息 | 6 |
 | `--chars` | 每条消息截断长度 | 4000 |
 | `-t, --team` | 团队/标题/内容过滤关键字（大小写不敏感） | — |
@@ -54,6 +59,33 @@ session-lens -s codex -l
 
 # OpenCode 指定会话 JSON 输出
 session-lens -s opencode --json -i ses_fc43...
+```
+
+### 全文搜索（跨工具定位）
+
+三种 pattern 形式（可任意组合、重复传入）：
+
+- 纯文本 → 子串匹配（大小写不敏感）：`--search FND-01`
+- 含 `*` `?` → 通配符（`*` 任意串，`?` 单字符，包含匹配不锚定）：`--search 'FND-0?'`
+- `re:/.../flags` → 正则：`--search 're:/commit [0-9a-f]{7}/'`（单/双反斜杠写法均兼容）
+
+```bash
+# 全部 5 个工具中搜 FND-01（省略 -s 即全扫），命中前后各 2 条上下文 + 文件大小/日期
+session-lens --search FND-01
+
+# 多 pattern（OR 语义）+ 多工具 + 4 线程 + 指定会话 ID（可多个前缀）
+session-lens --search FND-01 --search 'CDX-0?' -s aionui -s pi -j 4 -i 54509c90
+
+# 正则 + JSON 输出（含 fileInfo.sizeBytes/modified/created）
+session-lens --search 're:/RT-PRE-01[\s\S]{0,40}completed/i' --json -s aionui
+```
+
+搜索结果按会话聚合，每条命中展示：命中消息全文 + 前后上下文 + 会话文件路径 + 大小/修改/创建时间。
+
+**性能**：原生单进程有界并发池（`--jobs`），比多次单进程调用快（目录只遍历一次、结果统一排序）。推荐 **bun** 运行（实测快约 2 倍），无 bun 时自动用 node：
+
+```bash
+bun bin/session-lens.mjs --search FND-01   # 或 node bin/session-lens.mjs --search FND-01
 ```
 
 ## 作为 Skill 安装

@@ -33,8 +33,13 @@ test('非法来源报错', () => {
 });
 
 test('-n 非正整数报错', () => {
-  assert.throws(() => parseArgs(['-s', 'pi', '-n', '0']), /正整数/);
-  assert.throws(() => parseArgs(['-s', 'pi', '-n', 'x']), /正整数/);
+  assert.throws(() => parseArgs(['-s', 'pi', '-n', '0']), /≥ 1/);
+  assert.throws(() => parseArgs(['-s', 'pi', '-n', 'x']), /≥ 1/);
+});
+
+test('--context 允许 0，--ctx-chars 最小 20', () => {
+  assert.equal(parseArgs(['-s', 'pi', '--context', '0']).context, 0);
+  assert.throws(() => parseArgs(['-s', 'pi', '--ctx-chars', '10']), /≥ 20/);
 });
 
 test('未知参数报错', () => {
