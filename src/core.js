@@ -120,7 +120,10 @@ export async function findSessions(opts) {
   const { source } = opts;
   const mod = await loadAdapter(source);
   let list = await mod.list();
-  if (opts.id) list = list.filter((s) => s.id === opts.id);
+  if (opts.id) {
+    const want = String(opts.id).toLowerCase();
+    list = list.filter((s) => s.id === opts.id || s.id.toLowerCase().startsWith(want));
+  }
   if (opts.cwd) list = list.filter((s) => (s.cwd || '').toLowerCase().includes(String(opts.cwd).toLowerCase()));
   if (opts.team) {
     const needle = String(opts.team).toLowerCase();

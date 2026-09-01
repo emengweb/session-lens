@@ -7,6 +7,8 @@ import path from 'node:path';
 export function parse(content, file) {
   const lines = parseJsonl(content);
   const head = lines.find((l) => l.type === 'session') || {};
+  const mc = [...lines].reverse().find((l) => l.type === 'model_change');
+  const model = mc ? [mc.provider, mc.modelId].filter(Boolean).join('/') : '';
   const messages = [];
   let lastTs = head.timestamp || '';
   for (const l of lines) {
@@ -25,7 +27,7 @@ export function parse(content, file) {
     source: 'pi',
     title,
     cwd: head.cwd || '',
-    model: '',
+    model,
     updated: (lastTs || '').replace(/-/g, (c, i) => (i === 4 || i === 7 ? '-' : c)),
     file: file || '',
     messages,

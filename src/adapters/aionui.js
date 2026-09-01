@@ -22,7 +22,13 @@ export function parse(content, file) {
       text = String(m.content.text);
     }
     if (!text) continue;
-    if (role === 'user' && /^\s*## Team Governance/.test(text)) continue; // 系统注入
+    if (/^\s*## Team Governance/.test(text)) {
+      // 剥离治理样板，保留身份/新消息/任务板等有效部分；纯样板则丢弃
+      const keepFrom = ['## Your Identity', '## New Messages', '## Current Task Board Summary']
+        .map((h) => text.indexOf(h)).filter((i) => i >= 0);
+      if (!keepFrom.length) continue;
+      text = text.slice(Math.min(...keepFrom));
+    }
     messages.push({ role, ts, text });
   }
   return {

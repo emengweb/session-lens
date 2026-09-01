@@ -7,6 +7,8 @@ import path from 'node:path';
 export function parse(content, file) {
   const lines = parseJsonl(content);
   const meta = lines.find((l) => l.type === 'session_meta')?.payload || {};
+  const ts = lines.find((l) => l.type === 'event_msg' && l.payload?.type === 'thread_settings_applied')?.payload?.thread_settings;
+  const model = ts?.model ? [ts.model, meta.model_provider].filter(Boolean).join(' (') + (ts.model && meta.model_provider ? ')' : '') : (meta.model_provider || '');
   const messages = [];
   for (const l of lines) {
     if (l.type !== 'response_item') continue;
@@ -24,7 +26,7 @@ export function parse(content, file) {
     source: 'codex',
     title: meta.originator || meta.source || 'codex session',
     cwd: meta.cwd || '',
-    model: meta.model_provider || '',
+    model,
     updated: lines.filter((l) => l.timestamp).map((l) => l.timestamp).sort().pop() || meta.timestamp || '',
     file: file || '',
     messages,

@@ -34,7 +34,7 @@ npm link && session-lens -s <source>
 | `--chars` | 每条消息截断长度 | 4000 |
 | `-t, --team` | 团队/标题/内容过滤关键字（大小写不敏感） | — |
 | `-r, --role` | 角色过滤 `lead`/`teammate`/`any` | any |
-| `-i, --id` | 会话 ID | — |
+| `-i, --id` | 会话 ID（支持前缀匹配，如 `54509c9`） | — |
 | `--cwd` | 按 cwd 包含匹配 | — |
 | `-l, --list` | 只列会话（ID/时间/标题/路径），不显示消息 | — |
 | `--json` | JSON 输出（任务板 + 最近消息） | — |
@@ -82,8 +82,8 @@ SKILL.md 中的路径 `~/tools/session-lens` 需要改成你的仓库位置。
 
 | source | 位置 | 格式 |
 |--------|------|------|
-| codex | `~/.codex/sessions/**` 与 `~/.codex/archived_sessions/` | JSONL（session_meta + response_item/message） |
-| pi | `~/.pi/agent/sessions/<cwd-slug>/*.jsonl` | JSONL（session 头 + message 行） |
+| codex | `~/.codex/sessions/**` 与 `~/.codex/archived_sessions/` | JSONL（session_meta + response_item/message，model 取自 thread_settings_applied） |
+| pi | `~/.pi/agent/sessions/<cwd-slug>/*.jsonl` | JSONL（session 头 + message 行，model 取自 model_change） |
 | zcode | `~/.zcode/cli/agents/sess_*/agent_*/` | `metadata.json` + `transcript.jsonl` |
 | opencode | `~/.local/share/opencode/opencode.db` | SQLite（session/message/part 表） |
 | aionui | `%APPDATA%/AionUi/aionui/aionrs-sessions/sessions/<id>/state.json` | JSON（messages 数组） |
@@ -107,8 +107,12 @@ test/                 # node:test，24 个单测（纯函数 fixture 驱动）
 ## 测试
 
 ```bash
-npm test        # node --test
+npm test        # node --test，30 个用例（单测 + fixture 集成 + 端到端）
 ```
+
+## 环境变量
+
+- `SESSION_LENS_HOME`：覆盖主目录（默认 `~`）。测试与便携场景用；设置后所有 source 的数据根目录都指向该路径。
 
 ## License
 

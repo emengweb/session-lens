@@ -43,7 +43,8 @@ export function toIso(ts) {
   return String(ts);
 }
 
-/** 用户主目录（正斜杠风格）。 */
+/** 用户主目录（正斜杠风格）。SESSION_LENS_HOME 可覆盖（测试/便携场景）。 */
 export function home() {
+  if (process.env.SESSION_LENS_HOME) return process.env.SESSION_LENS_HOME.replace(/\\/g, '/');
   return process.env.HOME?.replace(/\\/g, '/') || process.env.USERPROFILE?.replace(/\\/g, '/') || '';
 }
