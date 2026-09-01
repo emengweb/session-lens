@@ -1,0 +1,11 @@
+{
+  "name": "session-lens",
+  "version": "0.1.0",
+  "description": "Read-only chat-history lens for AI coding tools: codex, pi, zcode, opencode, aionui",
+  "type": "module",
+  "bin": { "session-lens": "bin/session-lens.mjs" },
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "license": "MIT"
+}
